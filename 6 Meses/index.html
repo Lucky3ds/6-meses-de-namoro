@@ -70,7 +70,7 @@ let heart = { x: 1850, y: groundY - 60, size: 32, collected: false };
 // PERSONAGEM
 const player = {
   x: 50, y: groundY - 60, w: 32, h: 52,
-  velY: 0, speed: 4, jumpForce: 10,
+  velY: 0, speed: 4, jumpForce: 12,
   grounded: false,
   frame: 0,
   frameTick: 0,
@@ -142,8 +142,8 @@ const player = {
     // anda sempre para a direita
     this.x += this.speed;
 
-    // pulo
-    if (jumpRequested && this.grounded) this.jump();
+    // pulo com tolerância
+    if (jumpRequested && this.canJump()) this.jump();
     jumpRequested = false;
 
     this.y += this.velY;
@@ -152,8 +152,9 @@ const player = {
 
     this.onGround = false;
     for (let p of platforms) {
+      const tolerance = 3; // tolerância para pulo
       if (this.x + this.w > p.x && this.x < p.x + p.w &&
-          this.y + this.h > p.y && this.y + this.h < p.y + p.h) {
+          this.y + this.h > p.y - tolerance && this.y + this.h < p.y + p.h) {
         this.y = p.y - this.h;
         this.velY = 0;
         this.grounded = true;
@@ -179,11 +180,23 @@ const player = {
     }
   },
 
-  jump() {
-    if (this.grounded) {
-      this.velY = -this.jumpForce;
-      this.grounded = false;
+  canJump() {
+    return this.grounded || this.nearGround();
+  },
+
+  nearGround() {
+    for (let p of platforms) {
+      if (this.x + this.w > p.x && this.x < p.x + p.w &&
+          this.y + this.h > p.y - 3 && this.y + this.h < p.y + 3) {
+        return true;
+      }
     }
+    return false;
+  },
+
+  jump() {
+    this.velY = -this.jumpForce;
+    this.grounded = false;
   }
 };
 
